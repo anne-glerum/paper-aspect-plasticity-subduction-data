@@ -1,0 +1,12 @@
+To run the selfconsistent subduction benchmark
+of Schmeling et al. 2008 case 1 and 3:
+
+1) Compile additional plugins:
+- slab_tip_trench.*
+
+2) Create input files and submit jobs:
+- batch_1 for case1
+- batch_3 for case3
+
+3) Postprocess slab tip data:
+- script_slab_tip_depth_1_3 
