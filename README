@@ -1,0 +1,12 @@
+This repository belongs to the paper
+
+Nonlinear viscoplasticity in ASPECT: benchmarking and applications to subduction
+Glerum, A., Thieulot, C., Fraters, M., Blom, C. and Spakman, W.
+Solid Earth Discussions, 2017
+
+The repository includes the following files needed to run the benchmarks and 
+3D subduction models with ASPECT v1.5.0:
+- Input files (*.prm)
+- Source code of the plugins that can be compiled as shared libraries (*.cc and *.h)
+Also included are gnuplot scripts (script_*) and data files (*.dat) used in these scripts for
+plotting the graphs in the paper.
