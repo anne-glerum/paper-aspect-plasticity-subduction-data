@@ -1,0 +1,179 @@
+##
+# The Schmeling subduction benchmark as described in
+# Schmeling et al. PEPI 2008 and reproduced in Glerum
+# et al. 2017. A 2D time-dependent model
+# of a plate subducting into the mantle, decoupling
+# from the surface through Sticky-air. 
+##
+# General Parameters
+## 
+set Dimension                              = 2
+set Start time                             = 0
+set End time                               = 100.5e6 #My
+set CFL number				   = 0.2
+set Use years in output instead of seconds = true
+set Output directory = harmonic_0
+set Number of cheap Stokes solver steps    = 200
+
+set Additional shared libraries            = lib_schmeling/build_release/libschmeling.so
+
+##
+# Parameters describing the model
+# The domain is a 2D box of size 3000 km x 750 km.
+# Because the domain's aspect ratio is large, 
+# we prescribe more grid cells in the x-direction 
+# than in the y-direction of the initial coarse grid.
+##
+subsection Geometry model
+  set Model name = box 
+
+  subsection Box
+    set X extent = 3000000
+    set Y extent = 750000
+    set X repetitions = 4
+  end
+end
+
+##
+# All boundaries are free slip. Boussinesq approximation.
+## 
+subsection Model settings
+  set Fixed temperature boundary indicators   = 2,3
+  set Tangential velocity boundary indicators = 0,1,2,3
+  set Include adiabatic heating = false
+  set Include shear heating     = false
+end
+
+##
+# Temperature effects are not included, so T is set to 0 everywhere. 
+##
+subsection Boundary temperature model
+  set Model name = box
+  
+  subsection Box
+    set Bottom temperature = 0 
+    set Top temperature    = 0
+  end
+end
+
+##
+# Gravity is inversely parallel to the y-direction
+##
+subsection Gravity model
+  set Model name = vertical
+
+  subsection Vertical
+    set Magnitude = 9.81
+  end
+end
+
+##
+# Temperature is set to zero everywhere
+##
+subsection Initial conditions
+  set Model name = function 
+
+  subsection Function
+    set Function expression = 0.0
+  end
+end
+ 
+##
+# No thermal effects are included
+##
+subsection Material model
+  set Model name = multicomponent
+
+  subsection Multicomponent 
+    set Thermal conductivities        = 0.0
+    set Thermal expansivities         = 0.0
+    set Viscosities                   = 1e21, 1e23, 1e19
+    set Densities                     = 3200, 3300, 1
+    set Specific heats                = 1.0
+    set Reference temperature         = 1.0   
+    set Viscosity averaging scheme    = geometric
+  end
+end
+
+##
+# This part of this input file describes how many times the
+# mesh is refined and what to do with the solution once computed
+# As the slab subducts, we will want the mesh to follow the
+# slab/mantle compositional boundary. Therefore, Strategy is set
+# to compostion. At t0, a coarse mesh of level 7 (but 4 times as
+# many cells in the x-direction) will be constructed, which is
+# then twice refined and coarsened based on composition. This will
+# result in 4 grid levels. We set the minimum refinement level to 5,
+# i.e. a grid of 128x32 cells. Every 10 timesteps, the mesh will
+# be recomputed.
+##
+subsection Mesh refinement
+  set Initial adaptive refinement = 1
+  set Strategy                           = composition, minimum refinement function
+  set Coarsening fraction                = 0.05
+  set Refinement fraction                = 0.95
+  set Initial global refinement          = 5
+  set Minimum refinement level           = 5
+   subsection Minimum refinement function
+   set Coordinate system   = cartesian
+   set Variable names      = x,z
+   set Function constants  = Ax=1000000.0, Az=700000.0, Bz=500000.0, Cx=1100000.0, Dz=600000.0
+   set Function expression = if(z>Az-20000,6,5)
+   end
+  set Time steps between mesh refinement = 10
+end
+
+##
+# We want velocity and composition statistics to check for
+# the "drunken-sailor" effect and mass conservation.
+# Visualization output every 1 My will help us to interpret 
+# the subduction evolution.
+##
+subsection Postprocess
+  set List of postprocessors = visualization, velocity statistics, composition statistics, subduction statistics
+  subsection Subduction statistics
+   set Compositional field number of slab = 0
+   set Compositional field number of trench = 0
+  end
+
+  subsection Visualization
+    set List of output variables = density, viscosity
+    set Time between graphical output = 1000000.0
+  end
+end
+
+##
+# Here we describe 2 compositional fields; their value is 1 within 
+# the field and zero outside the field.
+# The first field represents the subducting plate
+# and the second the sticky-air. 
+# Note that the order of the fields in the density and viscosity list should
+# be the same. 
+# In subsection Function, we define five function constants to help describe
+# the compositional fields.
+## 
+subsection Compositional fields
+  set Number of fields = 2
+end
+
+subsection Compositional initial conditions
+  set Model name = function
+ 
+    subsection Function
+      set Variable names      = x,z
+      set Function constants  = Ax=1000000.0, Az=700000.0, Bz=500000.0, Cx=1100000.0, Dz=600000.0
+      set Function expression = if((x>=Ax&z>=Dz&z<Az)|(x>=Ax&x<=Cx&z>=Bz&z<Dz),1,0); if(z>=Az,1,0)
+ # Smooth compositional field interfaces
+ #     set Function expression = if((x>=Ax&x<=Cx&z>=Bz&z<Dz),1,if(x>=Ax&z>=Dz,0.5*(1.0+tanh((Az-z)/3000)),0)); \
+ #                               -0.5*(1.0+tanh((Az-z)/3000))+1
+  end
+end
+
+##
+# Because temperature effects are not included, we
+# set the temperature polynomial degree to 1.
+##
+subsection Discretization
+#   set Stokes velocity polynomial degree = 2
+   set Temperature polynomial degree = 1
+end 
