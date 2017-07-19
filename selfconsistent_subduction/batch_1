@@ -1,0 +1,30 @@
+#!/bin/bash
+
+## Case 1 Schmeling et al. 2008
+## For a particular averaging method 'av'
+## create and submit 4 runs with increasing 
+## mesh refinement levels.
+## Set corresponding output directory name.
+
+amr=1
+
+until [ $amr -eq 5 ]
+do
+
+av="m"
+dirname=$av"_"$amr
+outfilename=$av"_"$amr"/opla" 
+infilename="schmeling_"$av"_"$amr".prm"
+
+mkdir $dirname
+
+echo "$amr", "$outfilename", "$infilename", "$dirname"
+sed  -e "s/set Output directory .*/set Output directory = $dirname/g" -e "s/set Initial adaptive refinement .*/set Initial adaptive refinement = $amr/g" schmeling_$av.prm > "$infilename"
+
+qsub -v OUTPUTFILE=$outfilename,INPUTFILE=$infilename run_batch
+
+echo "$amr", "$outfilename", "$infilename", "$dirname"
+
+amr=$((amr+1))
+
+done

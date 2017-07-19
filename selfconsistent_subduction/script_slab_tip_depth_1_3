@@ -1,0 +1,111 @@
+## Gnuplot script for the "Self-consistent subduction benchmark"
+## of Schmeling et al. 2008 as performed in Glerum et al. 2017.
+## The script plots the depth of the slab tip over time for the
+## different mesh resolutions and viscosity averaging methods.
+## Two files are created, one for case 1 and one for case 3.
+  
+## png outfile file
+set term pngcairo
+set termoption dash
+
+## Graph formatting
+set size square
+set xtics 10 font "Times-New-Roman"
+set ytics 100 font "Times-New-Roman"
+set mytics 2
+
+unset key
+set grid xtics ytics mytics lt 1 lc rgb "grey"
+
+unset colorbox
+
+set border lw 2 
+
+set xlabel 'Time [My]' font "Times-New-Roman:Bold, 14"
+set ylabel 'Slab tip depth [km]' font "Times-New-Roman:Bold, 14"
+
+## Add key
+set style textbox opaque noborder
+set label 'Averaging:' at screen 0.84,0.91 boxed right font "Times-New-Roman, 12" front 
+set label 'Arithmetic' at screen 0.84,0.86 boxed right font "Times-New-Roman, 12" front tc rgb "dark-blue"
+set label 'Infinity norm' at screen 0.84,0.82 boxed right font "Times-New-Roman, 12" front tc rgb "orange"
+set label 'Geometric' at screen 0.84,0.78 boxed right font "Times-New-Roman, 12" front tc rgb "dark-green"
+set label 'Harmonic' at screen 0.84,0.74 boxed right font "Times-New-Roman, 12" front tc rgb "dark-red"
+
+## The output file
+set output 'Selfconsistent_subduction_1_slab_depth.png'
+
+## Set line styles
+## Color group indicates averaging method,
+## color intensity the max refiment level.
+set style line 1 lt 1 lc rgb "seagreen" lw 3
+set style line 2 lt 1 lc rgb "light-green" lw 3
+set style line 3 lt 1 lc rgb "green" lw 3
+set style line 4 lt 1 lc rgb "dark-green" lw 3
+set style line 5 lt 1 lc rgb "salmon" lw 3 
+set style line 6 lt 1 lc rgb "light-red" lw 3
+set style line 7 lt 1 lc rgb "red" lw 3
+set style line 8 lt 1 lc rgb "dark-red" lw 3
+set style line 9 lt 1 lc rgb "skyblue" lw 3 
+set style line 10 lt 1 lc rgb "royalblue" lw 3
+set style line 11 lt 1 lc rgb "blue" lw 3
+set style line 12 lt 1 lc rgb "dark-blue" lw 3
+set style line 13 dt 2 lc rgb "red" lw 3
+set style line 14 lt 1 lc rgb "lemonchiffon" lw 3
+set style line 15 lt 1 lc rgb "yellow" lw 3
+set style line 16 lt 1 lc rgb "gold" lw 3
+set style line 17 lt 1 lc rgb "orange" lw 3
+set style fill transparent solid 0.5 noborder
+
+## Plotting
+## We subtract the 50 km of sticky-air
+plot [0:100] [700:200] \
+                       'g_1/statistics' u ($2/1e6):($23-50) ls 1 w l t "512x128",\
+                       'g_2/statistics' u ($2/1e6):($23-50) ls 2 w l t "1024x256",\
+                       'g_3/statistics' u ($2/1e6):($23-50) ls 3 w l t "2048x512",\
+                       'g_4/statistics' u ($2/1e6):($23-50) ls 4 w l t "4096x1024",\
+                       'h_1/statistics' u ($2/1e6):($23-50) ls 5 w l t "512x128",\
+                       'h_2/statistics' u ($2/1e6):($23-50) ls 6 w l t "1024x256",\
+                       'h_3/statistics' u ($2/1e6):($23-50) ls 7 w l t "2048x512",\
+                       'h_4/statistics' u ($2/1e6):($23-50) ls 8 w l t "4096x1024",\
+                       'a_1/statistics' u ($2/1e6):($23-50) ls 9 w l t "512x128",\
+                       'a_2/statistics' u ($2/1e6):($23-50) ls 10 w l t "1024x256",\
+                       'a_3/statistics' u ($2/1e6):($23-50) ls 11 w l t "2048x512",\
+                       'a_4/statistics' u ($2/1e6):($23-50) ls 12 w l t "4096x1024",\
+                       'm_1/statistics' u ($2/1e6):($23-50) ls 14 w l t "512x128",\
+                       'm_2/statistics' u ($2/1e6):($23-50) ls 15 w l t "1024x256",\
+                       'm_3/statistics' u ($2/1e6):($23-50) ls 16 w l t "2048x512",\
+                       'm_4/statistics' u ($2/1e6):($23-50) ls 17 w l t "4096x1024"
+
+## The original data of Schmeling et al. 2008 (can be requested from that paper's first author)
+## as plotted in the background for reference.
+##                       'Data_Schmeling_2008/I2VIS_1821x93_harm.dat' u 1:2 ls 8 w linespoints,\
+##                       'Data_Schmeling_2008/I2ELVIS_561x141_harm.dat' u 1:2 ls 5 w linespoints,\
+##                       'Data_Schmeling_2008/LAPEX_geom.dat' u 1:2 ls 1 w linespoints,\
+##                       'Data_Schmeling_2008/I2VIS_geom.dat' u 1:2 ls 4 w linespoints ,\
+##                       'Data_Schmeling_2008/I2ELVIS_884x125_arith.dat' u 1:2 ls 12 w linespoints ,\
+##                       'Data_Schmeling_2008/FDCON_561x141_arith.dat' u 1:2 ls 9 w linespoints, \
+
+## The output file for case 3
+set output 'Selfconsistent_subduction_3_slab_depth.png'
+set mxtics 2
+set grid xtics ytics mxtics mytics lt 1 lc rgb "grey"
+
+## Plotting
+## We subtract the 50 km of sticky-air
+plot [0:50] [700:250] 'g_3_1/statistics' u ($2/1e6):($23-50) ls 1 w l t "512x128",\
+                       'g_3_2/statistics' u ($2/1e6):($23-50) ls 2 w l t "1024x256",\
+                       'g_3_3/statistics' u ($2/1e6):($23-50) ls 3 w l t "2048x512",\
+                       'g_3_4/statistics' u ($2/1e6):($23-50) ls 4 w l t "4096x1024",\
+                       'h_3_1/statistics' u ($2/1e6):($23-50) ls 5 w l t "512x128",\
+                       'h_3_2/statistics' u ($2/1e6):($23-50) ls 6 w l t "1024x256",\
+                       'h_3_3/statistics' u ($2/1e6):($23-50) ls 7 w l t "2048x512",\
+                       'h_3_4/statistics' u ($2/1e6):($23-50) ls 8 w l t "4096x1024",\
+                       'a_3_1/statistics' u ($2/1e6):($23-50) ls 9 w l t "512x128",\
+                       'a_3_2/statistics' u ($2/1e6):($23-50) ls 10 w l t "1024x256",\
+                       'a_3_3/statistics' u ($2/1e6):($23-50) ls 11 w l t "2048x512",\
+                       'a_3_4/statistics' u ($2/1e6):($23-50) ls 12 w l t "4096x1024",\
+                       'm_3_1/statistics' u ($2/1e6):($23-50) ls 14 w l t "512x128",\
+                       'm_3_2/statistics' u ($2/1e6):($23-50) ls 15 w l t "1024x256",\
+                       'm_3_3/statistics' u ($2/1e6):($23-50) ls 16 w l t "2048x512",\
+                       'm_3_4/statistics' u ($2/1e6):($23-50) ls 17 w l t "4096x1024"
