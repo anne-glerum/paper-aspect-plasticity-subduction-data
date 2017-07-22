@@ -1,0 +1,37 @@
+## Gnuplot script for the "Indentor benchmark" 
+## surface pressure results
+## shown in Glerum et al. 2017 
+  
+set term pngcairo font "Times-New-Roman,14"
+set termoption dash enhanced
+
+set datafile separator ","
+
+## Set style lines
+set style line 1 lt 2 lc rgb "grey" lw 2
+set style line 2 lt 2 lc rgb "blue" lw 2
+set style line 3 lt 1 lc rgb "red" lw 2
+
+## Graph formatting
+set size ratio 0.1515500341
+
+set xtics 0.5
+set xtics font "Times-New-Roman:Bold, 14" 
+set ytics -10,100,90 add ("{/Times-New-Roman:Bold {/Symbol p}+1}" 4.14159265359, "1" 1., "-2" -2., "7" 7.)
+set ytics font "Times-New-Roman:Bold, 14" 
+
+unset key
+unset colorbox
+
+set xlabel '{/Times-New-Roman:Bold x|_{y=1}}' font "Times-New-Roman:Bold, 18"
+set ylabel 'Pressure' font "Times-New-Roman:Bold, 18"
+set border lw 3
+
+## The output file
+set output 'Indentor_surface_pressure.png'
+
+## Plotting
+plot [0:1] [-2.:7.0] 'rough_indentor/surface_p.csv' u 10:4 w l ls 2, \
+                     'smooth_indentor/surface_p.csv' u 10:4 w l ls 3, \
+                     pi+1 ls 1, \
+                     1 ls 1

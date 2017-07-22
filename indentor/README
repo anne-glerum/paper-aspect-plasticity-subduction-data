@@ -1,0 +1,17 @@
+1) Install the following libraries as a plugin
+to create a box geometry with two different boundary
+conditions on the top boundary:
+- boxaddbi.*
+- T_boxaddbi.*
+- c_boxaddbi.*
+
+2) Run ASPECT with the input files:
+- rough_indentor.prm
+- smooth_indentor.prm
+
+3) Extract the pressure along the top boundary of the domain with
+the ParaView (v 5.4) script with:
+$ ./pvbatch extract_surface_pressure.py
+
+4) Plot surface pressure with gnuplot script:
+- script_indentor
