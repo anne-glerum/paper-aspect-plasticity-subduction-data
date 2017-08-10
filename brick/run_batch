@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -l walltime=200:00:00
+#PBS -j oe
+#PBS -l nodes=1:ppn=32
+#PBS -N brick
+
+cd /home/glerum/aspect/180617/aspect/brick
+
+mpirun -np 28 --map-by node  ../../build_release/aspect "$INPUTFILE" > "$OUTPUTFILE"
+echo "$INPUTFILE","$OUTPUTFILE"

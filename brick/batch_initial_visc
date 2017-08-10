@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Start of initial viscosity interval (1e19 to 1e26)
+# Initial global refinement level (for benchmarks: 5 to 8)
+ref=7
+# Extensional or compressional mode (extension | compression) 
+mode="compression"
+# Internal angle of friction
+phi=30
+
+for visc in 1e19 1e20 1e21 1e22 1e23 1e24 1e25
+do
+
+dirname=$mode"_"$phi"_"$ref"_"$visc
+outfilename=$mode"_"$phi"_"$ref"_"$visc"/opla" 
+infilename=$mode"_"$phi"_"$ref"_"$visc".prm"
+
+mkdir $dirname
+
+sed  -e "s/set Output directory .*/set Output directory = $dirname/g" -e "s/set List of phis of fields .*/set List of phis of fields = $phi,0/g" -e "s/set Initial global refinement .*/set Initial global refinement = $ref/g" -e "s/set List of initial viscs of fields .*/set List of initial viscs of fields = $visc,1e20/g" brick_$mode.prm > "$infilename"
+
+qsub -v OUTPUTFILE=$outfilename,INPUTFILE=$infilename run_batch
+
+echo "$visc", "$outfilename", "$infilename", "$dirname"
+
+done

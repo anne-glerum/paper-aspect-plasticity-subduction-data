@@ -1,0 +1,206 @@
+# Input file for the "brick benchmark" results of
+# Glerum et al. (2017). See also Lemiale et al. (2008)
+# and Kaus (2010).
+#
+############### Global parameters
+# We solve for composition once, then iterate out Stokes.
+# 1 Timestep experiment.
+set Dimension                              = 2
+set Start time                             = 0
+set End time                               = 0
+set Use years in output instead of seconds = false
+set CFL number                             = 0.5
+set Linear solver tolerance                = 1e-7 
+set Nonlinear solver tolerance             = 1e-7
+set Output directory                       = test_pp
+set Nonlinear solver scheme                = iterated Stokes
+set Number of cheap Stokes solver steps    = 200
+set Max nonlinear iterations               = 1000
+
+# We need the viscoplastic.cc and shear_band_angle.cc plugins.
+set Additional shared libraries            = ../SM13_3D/lib_SM13_3D/build_release/libsm13_3d.so, lib_brick/build_release/libbrick.so
+
+
+############### Geometry
+# We consider a 2D box of 40x10 km of which the elements are of unit aspect ratio.
+subsection Geometry model
+  set Model name = box
+
+  subsection Box
+    set X extent  = 40000
+    set Y extent  = 10000
+    set X repetitions = 4
+  end
+end
+
+
+############### Boundary conditions
+# We neglect the material parameters that pertain to the temperature.
+# We prescribe a compressional horizontal velocity on the vertical
+# boundaries, but leave the vertical component free.
+# The bottom boundary is free slip, the top boundary open.
+subsection Model settings
+  set Prescribed velocity boundary indicators = 0 x:function,1 x:function
+  set Tangential velocity boundary indicators = 2
+  set Include adiabatic heating = false
+  set Include shear heating     = false 
+end
+
+
+
+############### Material properties
+# No temperature effects. A viscoplastic medium with a viscous inclusion.
+subsection Material model
+  set Model name = viscoplastic
+  subsection Viscoplastic model
+    set Thermal conductivity          = 0.0
+    set Reference density             = 2700.0
+    set Reference viscosity           = 1.0e24
+    set Reference temperature         = 0.0
+    set Thermal expansion coefficient = 0.0
+    set Reference specific heat       = 1
+
+    ## We can estimate the maximum strain rate based
+    ## on the velocity differenc and the element size:
+    ## 2*2e-11[m/s]/(40e3[m]/(4*2^refinement_level))=
+    ## 1.28e-13 - 1e-12 [1/s].
+    ## Using the maximum strain rate and minimum friction angle 0
+    ## we can estimate the minimum viscosity over all
+    ## runs as 40e6 [Pa] /(2*1e-12 [1/s]). Naturally, this
+    ## minimum viscosity also needs to be lower than the 
+    ## viscosity of the weak seed. The maximum viscosity
+    ## needs the >= the viscous viscosity of the medium.
+    subsection Viscosity
+      set Viscosity Averaging       = Max
+      set Minimum Viscosity         = 1e19
+      set Maximum Viscosity         = 1e26
+      set Harmonic viscous and plastic viscosity averaging = false
+      ## Alternatively to using an initial viscosity,
+      ## we can use the background strain rate set by the velocity
+      ## boundary conditions and domain width 2*v/W=2*2e-11/4e4=1e-15
+      ## as initial strain rate
+      # set Use initial strain rate = true
+      # set Initial strain rate     = 1e-15
+    end
+
+  end
+end
+
+
+############## rho * g = 27000
+subsection Gravity model
+  set Model name = vertical
+
+  subsection Vertical
+    set Magnitude = 10
+  end
+end
+
+
+############### We prescribe a velocity of W/2 * background strain rate invariant
+# with W the width of the domain and the background strain rate 1e-15 1/s.
+subsection Boundary velocity model
+  subsection Function
+    set Function expression     =  if(x>=20000.0,-2.e-11,2.e-11);0 
+  end
+end
+
+
+############### Parameters describing the temperature field
+# As above, there is no need to set anything for the
+# temperature boundary conditions.
+subsection Boundary temperature model
+  set Model name = box
+end
+
+subsection Initial conditions
+  set Model name = function
+
+  subsection Function
+    set Function expression = 0
+  end
+end
+
+
+############### Parameters describing the compositional fields
+# We include two compositional fields: the viscoplastic medium and
+# the viscous inclusion.
+subsection Compositional fields
+   set Number of fields = 2 
+   ## Dislocation creep
+   set List of activation energies dislocation of fields = 0, 0
+   set List of activation volumes dislocation of fields  = 0, 0
+   set List of prefactors dislocation of fields          = 1e-25, 1e-20
+   set List of stress exponents of fields                = 1, 1
+   set List of constant coefficients nu dislocation of fields = 4, 4
+   ## Diffusion creep
+   set List of activation energies diffusion of fields = 0, 0
+   set List of activation volumes diffusion of fields  = 0, 0
+   set List of prefactors diffusion of fields          = 1e-25, 1.e-20
+   set List of constant coefficients nu diffusion of fields = 4, 4
+   ## Plasticity
+   set List of cohesions of fields                       = 40e6, 1e20
+   set List of phis of fields                            = 0, 0
+   ## Other material properties
+   ## The initial viscosity of the seed is equal to its linear,
+   ## constant viscosity.
+   ## Based on the background strain rate of 1e-15 1/s,
+   ## the maximum lithostatic pressure of 10e3[m]*2700[km/m]*10[m/s^2]
+   ## = 270 MPa that is used as an initial pressure guess
+   ## and the minimum and maximum friction angle,
+   ## we can estimate the initial viscosity to be ~1.7-8.5e22 Pas.
+   set List of capacities of fields                      = 1,1
+   set List of conductivities of fields                  = 0,0
+   set List of refdens of fields                         = 2700.0, 2700.0
+   set List of reftemps of fields                        = 0,0
+   set List of initial viscs of fields                   = 1e23, 1e20
+end
+
+
+############## Description of the initial compositional fields
+# 1) medium
+# 2) 800x400 m inclusion at bottom center of the domain
+subsection Compositional initial conditions
+   set Model name = function
+   subsection Function
+     set Variable names = x,z
+     set Function expression = if(x>=20400.0|x<19600.0|z>=400.0,1,0); \
+                               if(x>=20400.0|x<19600.0|z>=400.0,0,1) 
+   end
+end
+
+
+############### Parameters describing the discretization
+# If we refine, do it based on the strain rate, viscosity or
+# velocity and after each
+# level of refinement, compute the shear band angles in a 
+# postprocessing step.
+subsection Mesh refinement
+  set Initial adaptive refinement        = 0
+  set Initial global refinement          = 5
+  set Refinement fraction                = 0.9
+  set Coarsening fraction                = 0.0
+  set Strategy                           = strain rate # viscosity # velocity
+  set Run postprocessors on initial refinement = true
+end
+
+
+############### We are not interested in temperature
+subsection Discretization
+  subsection Stabilization parameters
+  end
+  set Temperature polynomial degree = 1
+end
+
+
+############### Parameters describing the what to do with the solution
+# Average shear band angles are automatically computed according to the
+# description in Kaus (2010). The Stokes residual after each nonlinear 
+# iteration is monitored.
+subsection Postprocess
+  set List of postprocessors = visualization, shear band angle, Stokes residual
+
+  subsection Visualization
+    set List of output variables = viscosity, strain rate #, viscosity ratio
+  end
+end

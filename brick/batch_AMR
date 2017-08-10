@@ -1,0 +1,38 @@
+#!/bin/bash
+# This script generates input files and output directories as well
+# as starts a series of runs with different internal angles of frictions
+# for a specified adaptive mesh refinement level, deformational mode
+# and number of nonlinear iterations per mesh refinement round.
+
+# Start of internal angle of friction interval (for benchmarks: 0)
+phi=0
+# Initial adaptive refinement level (for benchmarks: 0 to 3)
+ref=2
+# Extensional or compressional mode (extension | compression) 
+mode="compression"
+# The number of nonlinear iterations
+# For two levels of AMR, we use 333 iterations
+# such that after all initial refinement a total
+# of max 1000 iterations is performed 
+# (the same number as for the uniform mesh runs)
+n_iter=333
+
+# Start runs until angle equals 35 degrees
+until [ $phi -eq 35 ]
+do
+
+dirname=$mode"_AMR_"$ref"_"$phi
+outfilename=$mode"_AMR_"$ref"_"$phi"/opla" 
+infilename=$mode"_AMR_"$ref"_"$phi".prm"
+
+mkdir $dirname
+
+sed  -e "s/set Output directory .*/set Output directory = $dirname/g"  -e "s/set Max nonlinear iterations .*/set Max nonlinear iterations = $n_iter/g" -e "s/set List of phis of fields .*/set List of phis of fields = $phi,0/g" -e "s/set Initial adaptive refinement .*/set Initial adaptive refinement = $ref/g" brick_$mode.prm > "$infilename"
+
+qsub -v OUTPUTFILE=$outfilename,INPUTFILE=$infilename run_batch
+
+echo "$phi", "$outfilename", "$infilename", "$dirname"
+
+phi=$((phi+5))
+
+done

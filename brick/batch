@@ -1,0 +1,30 @@
+#!/bin/bash
+# This script generates input files and output directories as well
+# as starts a series of runs with different internal angles of frictions
+# for a specified mesh refinement level and deformational mode.
+
+# Start of internal angle of friction interval (for benchmarks: 0)
+phi=0
+# Initial global refinement level (for benchmarks: 5 to 8)
+ref=7
+# Extensional or compressional mode (extension | compression) 
+mode="extension"
+
+until [ $phi -eq 35 ]
+do
+
+dirname=$mode"_"$ref"_"$phi
+outfilename=$mode"_"$ref"_"$phi"/opla" 
+infilename=$mode"_"$ref"_"$phi".prm"
+
+mkdir $dirname
+
+sed  -e "s/set Output directory .*/set Output directory = $dirname/g" -e "s/set List of phis of fields .*/set List of phis of fields = $phi,0/g" -e "s/set Initial global refinement .*/set Initial global refinement = $ref/g" brick_$mode.prm > "$infilename"
+
+qsub -v OUTPUTFILE=$outfilename,INPUTFILE=$infilename run_batch
+
+echo "$phi", "$outfilename", "$infilename", "$dirname"
+
+phi=$((phi+5))
+
+done
