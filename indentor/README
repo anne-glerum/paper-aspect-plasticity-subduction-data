@@ -15,3 +15,8 @@ $ ./pvbatch extract_surface_pressure.py
 
 4) Plot surface pressure with gnuplot script:
 - script_indentor
+
+5) Compute velocity and pressure errors compared to the analytical solution
+   with
+$ python compute_error.py
+and then providing the directory in which the file point_values.txt is contained.
