@@ -1,0 +1,51 @@
+## Gnuplot script for the "Brick experiment" results
+## of Glerum et al. 2017.
+
+## We add text in Inscape, thus output as svg
+#set term svg font "Times-New-Roman,14"
+set term pngcairo font "Times-New-Roman,14"
+set termoption dash
+
+## Set line styles
+set style line 1 lc rgb 'gray70' lt 1 lw 3 pt 7 pi -1 ps 1.5
+set style line 2 lc rgb 'gray50' lt 1 lw 3 pt 7 pi -1 ps 1.5
+set style line 3 lc rgb 'gray30' lt 1 lw 3 pt 7 pi -1 ps 1.5
+set style line 4 lc rgb 'black' lt 1 lw 2 
+set style line 5 lc rgb 'black' dt 2 lw 2 
+set style line 6 lc rgb 'black' dt 3 lw 2 
+set style line 7 lc rgb 'red' lt 1 lw 3 pt 7 pi -1 ps 1.5
+set style line 8 lc rgb 'red' lt 1 lw 3 pt 7 pi -1 ps 1.5
+set style line 9 lc rgb 'red' lt 1 lw 3 pt 7 pi -1 ps 1.5
+
+## Graph formatting
+#set xtics 10
+set logscale x
+set size square
+set ytics 5
+
+unset key
+
+set grid lt 1 lc rgb "grey"
+
+unset colorbox
+
+set border lw 3
+set pointintervalbox 2.5
+
+set xlabel 'Initial viscosity [Pa s]' offset 0,0.5,0 font "Times-New-Roman:Bold, 18"
+set ylabel 'Shear band angle [{/Symbol \260}]' offset 0.5,0,0 font "Times-New-Roman:Bold, 18"
+
+## Output file
+set output 'brick_angles_initvisc.png'
+
+## Plotting
+## Unconverged models are colored red
+## Grey colors intensify with model mesh resolution
+plot [1e19:1e25] [25:65] 50 w l ls 4, 60 w l ls 4, \
+                    47.5 w l ls 5, 52.5 w l ls 5, \
+                    45 w l ls 6, \
+                    30 w l ls 4,\
+                    37.5 w l ls 5,\
+                    'extension_7_10_initvisc_angles.dat' u 1:2 with linespoints ls 2, \
+                    'extension_7_30_initvisc_angles.dat' u 1:2 with linespoints ls 2, \
+                    'compression_7_30_initvisc_angles.dat' u 1:2 with linespoints ls 2

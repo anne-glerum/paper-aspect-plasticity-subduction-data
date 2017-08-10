@@ -1,0 +1,18 @@
+#!/bin/bash
+# This script merges the average shear bands of each run
+# for a certain (adaptive) refinement level into one file
+# for plotting using the gnuplot script "script_brick_angles_initvisc"
+
+# The name of the file with shear band angles vs friction angle
+outfilename="extension_7_10_initvisc_angles.dat"
+
+for visc in 1e19 1e20 1e21 1e22 1e23 1e24 1e25
+do
+
+dirname="extension_7_$visc"
+infilename="$dirname/statistics" 
+
+# Get the shear band angle from the last refinement step 
+grep 'solution-00000' $infilename | awk '{print '$visc',$15}'  >> $outfilename
+
+done

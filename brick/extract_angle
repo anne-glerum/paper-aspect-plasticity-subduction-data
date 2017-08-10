@@ -1,0 +1,23 @@
+#!/bin/bash
+# This script merges the average shear bands of each run
+# for a certain (adaptive) refinement level into one file
+# for plotting using the gnuplot script "script_brick_angles"
+
+# The start of the internal angle of friction interval
+phi=0
+# The name of the file with shear band angles vs friction angle
+outfilename="compression_angles.dat"
+
+until [ $phi -eq 35 ]
+do
+
+dirname="compression_$phi"
+infilename="$dirname/statistics" 
+
+# Get the shear band angle from the last refinement step 
+#grep 'solution-00002' $infilename | awk '{print '$phi',$15}'  >> $outfilename
+grep 'solution-00000' $infilename | awk '{print '$phi',$15}'  >> $outfilename
+
+phi=$((phi+5))
+
+done

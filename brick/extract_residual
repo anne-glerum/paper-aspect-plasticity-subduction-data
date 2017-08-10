@@ -1,0 +1,16 @@
+#!/bin/bash
+
+phi=0
+
+until [ $phi -eq 35 ]
+do
+
+dirname="compression_7_$phi"
+infilename="$dirname/opla" 
+outfilename="$dirname/residual_e_7_$phi.dat"
+
+grep 'Residual' $infilename | awk '{print $6}' > $outfilename
+
+phi=$((phi+5))
+
+done

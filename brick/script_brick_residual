@@ -1,0 +1,42 @@
+## Gnuplot script for the "Brick experiment" results
+## of Glerum et al. 2017.
+
+## We add text in Inscape, thus output as svg
+set term svg
+set termoption dash
+set size square
+
+## Set line styles
+set style line 1 lt 1 lc rgb "black" lw 3 pt 4
+set style line 2 lt 1 lc rgb "red" lw 3 pt 4
+
+## Graph formatting
+set xtics 200
+set ytics 0.1
+set ytics format " "
+set xtics format " "
+set logscale y
+
+unset key
+
+set grid lt 1 lc rgb "grey"
+
+unset colorbox
+
+set border lw 3
+
+set xlabel 'Nr. of nonlinear iterations [-]' offset 0,0.5,0 font "Times-New-Roman:Bold, 18"
+set ylabel 'Relative residual [-]' offset 2,0,0 font "Times-New-Roman:Bold, 18"
+
+## Output file
+set output 'brick_residual_extension_7_init_visc.svg'
+
+## Plotting
+plot [0:1000] [0.00000005:0.001] 'extension_7_1e19/residual_e_1e19.dat' ls 1 w l, \
+                            'extension_7_1e20/residual_e_1e20.dat' ls 1 w l, \
+                            'extension_7_1e21/residual_e_1e21.dat' ls 1 w l, \
+                            'extension_7_1e22/residual_e_1e22.dat' ls 2 w l, \
+                            'extension_7_1e23/residual_e_1e23.dat' ls 2 w l, \
+                            'extension_7_1e24/residual_e_1e24.dat' ls 2 w l, \
+                            'extension_7_1e25/residual_e_1e25.dat' ls 2 w l
+
