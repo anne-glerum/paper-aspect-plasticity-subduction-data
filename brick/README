@@ -1,0 +1,18 @@
+1) Install the following libraries as a plugin
+to automatically measure the average shear band angle:
+- shear_band_angle.*
+
+
+2) Use the shell scripts batch, batch_AMR, or batch_initial_visc to generate inputfiles for
+different refinement levels, deformation modes, internal friction angles
+and initial viscosities from the base input files kaus_extension.prm and kaus_compression.prm.
+
+3) Extract the shear band angles for a fixed mesh resolution and varying friction angle
+using the script extract_angle to plot the angles with the gnuplot script script_brick_angles.
+This script requires the files angles_theory_extension.dat and angles_theory_compression.dat
+that contain the theoretical Roscoe, Arthur and Coulomb shear band angles. 
+
+4) Extract the shear band angles for a fixed mesh resolution and varying initial viscosity
+using the script extract_angle_visc to plot the angles with the gnuplot script script_brick_angles_initvisc.
+
+5) Plot the shear band angles for AMR with the gnuplot script script_brick_angles_AMR.
