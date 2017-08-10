@@ -1,0 +1,168 @@
+## The punch benchmark as performed in Glerum et al. 2017.
+## A one time-step experiment on
+## purely plastic material punched from above.
+set Dimension                              = 2
+set End time                               = 0 
+set Use years in output instead of seconds = false
+set Output directory                       = rough_indentor
+set Nonlinear solver scheme                = iterated Stokes 
+set Max nonlinear iterations               = 500
+set Linear solver tolerance                = 1e-9
+set Nonlinear solver tolerance             = 1e-11
+set Number of cheap Stokes solver steps    = 0
+## To obtain the correct pressure at the surface,
+## we should not normalize it over the surface.
+set Pressure normalization                 = no
+
+## We need the plugins boxaddbi.*, T_boxaddbi.*, c_boxaddbi.* and visco_plastic.*
+set Additional shared libraries            = lib_indentor/build_release/libindentor.so, ../SM13_3D/lib_SM13_3D/build_release/libsm13_3d.so
+
+## Unit square domain
+## We require an additional boundary indicator
+## at the top boundary to prescribe the punch
+## velocity on the otherwise open top boundary,
+## hence the plugin boxaddbi.
+subsection Geometry model
+  set Model name = boxaddbi 
+    subsection BoxAddBI
+      set X extent = 1 
+      set Y extent = 1
+   end
+end
+
+## No gravity
+subsection Gravity model
+  set Model name = vertical 
+  subsection Vertical
+    set Magnitude = 0 
+  end
+
+end
+
+## Purely plastic Von Mises material
+subsection Material model
+  set Model name = viscoplastic
+
+  subsection Viscoplastic model
+    set Thermal conductivity          = 0 
+    set Reference density             = 0.01
+    set Reference viscosity           = 1e3 
+    set Reference temperature         = 0 
+    set Thermal expansion coefficient = 0 
+    set Reference specific heat       = 1 
+
+      subsection Viscosity
+        set Activation energy diffusion = 0
+        set Activation volume diffusion = 0
+        set Prefactor diffusion         = 1e-50
+        set Constant coefficient diffusion = 1
+        set Activation energy dislocation = 0
+        set Activation volume dislocation = 0
+        set Prefactor dislocation         = 1e-50
+        set Constant coefficient dislocation = 1
+        set Stress exponent               = 1
+        set Angle internal friction       = 0
+        set Cohesion                      = 1
+
+# For the given mesh resolution an estimate can be made of the
+# maximum strain rate. Strain rate will be highest at the edges
+# of the punch. Here, velocity changes from a downward velocity
+# of magnitude 1.05 to an outward velocity of 1.05/sqrt(2) 
+# (see description of analytical solution). The mesh resolution
+# is 1/(2^9)=1/512. Therefore the expected maximum strain rate is
+# (1.05+1.05/sqrt(2))/(1/512)=918. For a yield strength of 1,
+# the minimum viscosity is 1/(2*918)=5.5e-4. Note that the strain
+# rate shown in paraview should be multiplied with sqrt(0.5) to 
+# get the effective strain rate.
+        set Minimum Viscosity         = 1e-4
+        set Maximum Viscosity         = 1e3
+        set Initial Viscosity         = 1e1
+        set Harmonic viscous and plastic viscosity averaging = false
+      end
+  end
+end
+
+## Uniform mesh
+subsection Mesh refinement
+  set Initial adaptive refinement        = 0
+  set Initial global refinement          = 9
+end
+
+## No slip lower boundary and free slip lateral boundaries. 
+## Top boundary: center punch area prescribed velocity, rest open.
+## For the rough indentor we set the vertical component to the
+## punch velocity, and the horizontal component to zero.
+subsection Model settings
+  set Fixed temperature boundary indicators   = 3,4
+  set Prescribed velocity boundary indicators = 4:function 
+  set Zero velocity boundary indicators       = 2 
+  set Tangential velocity boundary indicators = 0,1 
+end
+
+## In center of top boundary, a constant downward velocity is prescribed.
+subsection Boundary velocity model
+  subsection Function
+    set Function expression = 0;-1.05
+  end
+
+end
+
+## Temperature plays no role, set to zero everywhere.
+subsection Initial conditions
+  set Model name = function 
+
+  subsection Function
+    set Function expression = 0 
+  end
+
+end
+
+## We are dealing with an additional boundary indicator
+## however, hence the boxaddbi plugin.
+subsection Boundary temperature model
+  set Model name = boxaddbi  
+  subsection BoxAddBI
+    set Bottom temperature = 0 
+    set Top temperature = 0 
+    set Add. temperature = 0 
+  end
+
+end
+
+## There is only one material, so no need for a 
+## compositional field
+subsection Compositional fields
+   set Number of fields = 0
+end
+
+## We use the 'point values' postprocessor to extract
+## velocity and pressure values to compare to the analytical solution.
+## Velocities and pressures are evaluated at: 
+## point K of Fig. 1 of Glerum et al. (2017),
+## point L,
+## point I,
+## halfway between points H and B,
+## halfway between points J and F,
+## point H,
+## point J and
+## halfway between points I and D.
+subsection Postprocess
+  set List of postprocessors = visualization, velocity statistics, point values
+
+  subsection Visualization
+    set List of output variables      = strain rate, viscosity
+  end
+  subsection Point values
+    set Evaluation points = 0.40625, 0.96875; \
+                            0.59375, 0.96875; \
+                            0.5, 1.0; \
+                            0.375, 0.96875; \
+                            0.625, 0.96875; \
+                            0.375, 1.0; \
+                            0.625, 1.0; \
+                            0.5, 0.96875
+  end
+
+end
+
+
