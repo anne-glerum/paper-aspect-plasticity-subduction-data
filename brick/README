@@ -1,6 +1,8 @@
 1) Install the following libraries as a plugin
 to automatically measure the average shear band angle:
 - shear_band_angle.*
+and
+- viscoplastic.*
 
 
 2) Use the shell scripts batch, batch_AMR, or batch_initial_visc to generate inputfiles for

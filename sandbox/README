@@ -1,0 +1,14 @@
+1) Install the following libraries as a plugin:
+- viscoplastic.*
+
+2) Use sandbox.prm to compute the first timestep.
+
+3) Restart the sandbox model with different parameters
+for solving and refining with restart_sandbox.prm.
+
+4) Create paraview images and movies with 
+$ ./pvbatch sandbox_postprocess.py
+(You might need to change the directory/file names.)
+
+5) The average number of total degrees of freedom can be computed with
+grep free restart_sandbox/opla | awk 'BEGIN{FS=" "}{print $6}' | awk 'BEGIN{sum=0;count=0}{gsub(",", "");sum=sum+$1;count=count+1}END{print sum/count}'

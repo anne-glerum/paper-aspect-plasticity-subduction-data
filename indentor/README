@@ -4,6 +4,8 @@ conditions on the top boundary:
 - boxaddbi.*
 - T_boxaddbi.*
 - c_boxaddbi.*
+and
+- viscoplastic.*
 
 2) Run ASPECT with the input files:
 - rough_indentor.prm
