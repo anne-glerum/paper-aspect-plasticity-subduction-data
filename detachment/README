@@ -1,0 +1,11 @@
+1) Install the following libraries as a plugin:
+- viscoplastic.*
+
+2) Run the slab detachment benchmark with the input file detachment.prm. 
+This requires the input file for the initial particle locations called initial_particle_location.dat.
+
+3) Postprocessing of the run is by computing the necking width over time based on the particle positions.
+$ ./pp_necking.sh
+
+4) Plot the necking width over time with the gnuplot script script_detachment_necking_width.
+NB: I've not included the original data of Schmalholz (2011). This data can be obtained from the original author.
