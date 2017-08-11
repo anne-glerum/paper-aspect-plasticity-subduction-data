@@ -1,0 +1,4 @@
+# get average number of DOFS
+# restart_sandbox is the directory in which
+# the output file opla (or log.txt) is kept
+grep free restart_sandbox/opla | awk 'BEGIN{FS=" "}{print $6}' | awk 'BEGIN{sum=0;count=0}{gsub(",", "");sum=sum+$1;count=count+1}END{print sum/count}'
