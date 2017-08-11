@@ -1,0 +1,183 @@
+# Input file for the 3D subduction
+# model 1 of Glerum et al. (2017, Section 4),
+# but including an Adjacent Plate (AP).
+# Model 1 does not consider temperature effects and
+# every material except the subducting crust is linear
+# viscous. 
+
+set Dimension                              = 3
+set Start time                             = 0
+set End time                               = 40.e6 #My
+set CFL number                             = 0.5
+set Use years in output instead of seconds = true
+set Output directory                       = model1_AP
+set Nonlinear solver scheme                = iterated Stokes
+set Max nonlinear iterations               = 100
+set Linear solver tolerance                = 1e-6
+set Number of cheap Stokes solver steps    = 300
+set Nonlinear solver tolerance             = 1e-4 
+set Max nonlinear iterations in pre-refinement = 0
+
+set Additional shared libraries            = lib_SM13_3D/build_release/libsm13_3d.so
+
+subsection Geometry model
+  set Model name = box
+    subsection Box
+      set X extent = 4000000
+      set Y extent = 800000
+      set Z extent = 660000
+      set X repetitions = 5
+   end
+end
+
+subsection Gravity model
+  set Model name = vertical 
+  subsection Vertical
+    set Magnitude = 9.81
+  end
+
+end
+
+subsection Material model
+  set Model name = viscoplastic
+
+  subsection Viscoplastic model
+     set Thermal conductivity          = 0.0
+     set Reference density             = 3300.0
+     set Reference viscosity                     = 1.0e23
+     set Reference temperature         = 0.0
+     set Thermal expansion coefficient = 0
+     set Reference specific heat       = 1.0
+
+     subsection Viscosity
+         set Viscosity Averaging       = Max
+         set Harmonic viscous and plastic viscosity averaging = false
+         set Harmonic effective and maximum viscosity averaging = false
+         set Minimum Viscosity         = 1e19
+         set Maximum Viscosity         = 1.57e23
+     end
+  end
+end
+
+
+subsection Mesh refinement
+  set Initial adaptive refinement        = 2
+  set Initial global refinement          = 4
+  set Refinement fraction                = 0.96
+  set Coarsening fraction                = 0.04
+  set Minimum refinement level           = 2
+  set Strategy                           = composition, viscosity, minimum refinement function
+  subsection Minimum refinement function
+    set Function expression =  if(y<395000.0&y>=365000.0&z>=555000.0,6,2)
+  end
+  set Refinement criteria merge operation = plus
+  set Time steps between mesh refinement = 20
+end
+
+
+# The bottom boundary is no slip, all other boundaries are free slip.
+subsection Model settings
+  set Fixed temperature boundary indicators   = 4,5
+  set Zero velocity boundary indicators       = 4
+  set Tangential velocity boundary indicators = 0,1,2,3,5
+  set Include adiabatic heating               = false
+  set Include shear heating                   = false
+end
+
+
+# This model does not consider temperature, so we set temperature to zero.
+subsection Initial conditions
+  set Model name = function 
+
+   subsection Function
+    set Function expression = 0
+   end
+end
+
+subsection Boundary temperature model
+  set Model name = box 
+  subsection Box
+    set Bottom temperature = 0 
+    set Top temperature = 0
+  end
+
+end
+
+# There are 6 compositional fields, they represent
+# the mantle, overriding plate, mantle part of the subducting plate, and the crustal part,
+# as well as a weak tranform fault and an adjacent plate.
+# As the dislocation and diffusion creep laws are harmonically averaged into a composite
+# viscous rheology, we set identical parameters for each law, changing the nu coefficient
+# to 4 to obtain the desired linear viscosities.
+# Cohesions are set to high values for the purely viscous rheologies, so that they will 
+# never reach the plastic regime.
+#set List of prefactors dislocation of fields                      = 2.12e-21, 1.06e-23,3.03e-24,5.e-21 #7.08e-24, 2.12e-23 
+subsection Compositional fields
+   set Number of fields = 6
+   ## Dislocation creep
+   set List of activation energies dislocation of fields             = 0,0,0,0,0,0
+   set List of activation volumes dislocation of fields              = 0,0,0,0,0,0
+   set List of prefactors dislocation of fields                      = 6.3694e-21, 3.1847e-23, 9.0992e-24, 6.3694e-24, 6.3694e-21, 9.0992e-24
+   set List of stress exponents of fields                            = 1, 1, 1,1,1,1    
+   set List of constant coefficients nu dislocation of fields        = 4, 4, 4, 4, 4, 4 
+   ## Diffusion creep
+   set List of prefactors diffusion of fields                        = 6.3694e-21, 3.1847e-23, 9.0992e-24, 6.3694e-24, 6.3694e-21, 9.0992e-24
+   set List of activation energies diffusion of fields               = 0,0,0,0,0,0
+   set List of activation volumes diffusion of fields                = 0,0,0,0,0,0
+   set List of constant coefficients nu diffusion of fields          = 4,4,4,4,4,4
+   ## Plasticity
+   set List of cohesions of fields                                   = 1e15,1e15,1e15,20e6,1e15,1e15 
+   set List of phis of fields                                        = 0,0,0,0,0,0
+   ## Material properties
+   set List of capacities of fields                                  = 1,1,1,1,1,1
+   set List of conductivities of fields                              = 0,0,0,0,0,0
+   set List of refdens of fields                                     = 3250.0, 3250.0, 3330,3330, 3250, 3250   
+   set List of reftemps of fields                                    = 0,0,0,0,0,0  
+   set List of initial viscs of fields                               = 1.57e20,3.14e22,1.1e23,1.e20,1.57e20,1.1e23
+end
+
+subsection Compositional initial conditions
+   set Model name = function
+# mantle, OP, Mantle SP, Crust SP, WZ, AP
+   subsection Function
+     set Variable names = x,y,z
+     set Function constants = De=660000.0,A=50000.0,B=80000.0
+     set Function expression = if((y>=400000.0&((x>300000.0&z>=610000.0&z>=(660000.0+0.5555555*(x-1600000.0)))|(x>=1419830.0&z>=(560000.0+0.5555555*(x-1600000.0))&z<(660000.0+0.5555555*(x-1600000.0)))|(x>=1600000.0&z>=560000.0&x<3575000.0)|(x>=3575000.0&x<3700000.0&z>=(660000.0+0.8*(x-3700000.0)))))|(y<400000&z>=560000),0,1); \
+                               if(y>=400000.0&x>300000.0&z>=610000.0&z>=(660000.0+0.5555555*(x-1600000.0)),1,0); \
+                               if(y>=400000.0&((x>=1419830.0&z<(630000.0+0.5555555*(x-1600000.0))&z>=(560000.0+0.5555555*(x-1600000.0))&z<630000.0)|(x>=1600000.0&x<3575000&z<630000.0&z>=560000.0)|(x>=3575000&x<3700000&z<(660000.0+0.24*(x-3700000.0))&z>=(660000.0+0.8*(x-3700000.0)))),1,0); \
+                               if(y>=400000.0&((x>=1419830.0&z<(660000.0+0.5555555*(x-1600000.0))&z>=(630000.0+0.5555555*(x-1600000.0)))|(x>=1600000.0&x<3575000.0&z>=630000.0)|(x>=3575000.0&x<3700000.0&z>=(660000.0+0.24*(x-3700000.0)))),1,0); \
+                               if(y<400000.0&y>=360000.0&z>=560000.0,1,0); \
+                               if(y<360000.0&z>=560000.0,1,0)
+   end
+end
+
+
+subsection Discretization
+  set Temperature polynomial degree                = 1
+  subsection Stabilization parameters
+    set beta                            = 0.117 
+  end
+end
+
+subsection Checkpointing
+  set Steps between checkpoint = 50
+end
+
+subsection Termination criteria
+  set Checkpoint on termination = true
+end
+
+
+subsection Postprocess
+  set List of postprocessors = visualization,velocity statistics
+
+  subsection Visualization
+    set Time between graphical output = 1e6 #years
+    set List of output variables      = strain rate,material properties, error indicator #, viscosity ratio
+    set Interpolate output            = true
+    subsection Material properties
+      set List of material properties = density,viscosity
+    end
+  end
+
+end
