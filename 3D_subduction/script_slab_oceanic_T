@@ -1,0 +1,86 @@
+# This gnuplot script creates initial temperature
+# plots of the paper by Glerum et al. (2017).
+# One can select the parameters for the subducting 
+# plate SP or the overriding plate OP.
+
+# Set parameters
+dmax=125000.0
+Ta=1593.0
+Ts=293.0
+cp=1250.0
+alpha=2e-5
+g=9.81
+kappa=1e-6
+v_spread=0.0407653503 #SP
+#v_spread=0.1087076011 #OP
+
+# Set axes
+#set xrange [0:1600000.0] #OP
+set xrange [0:2400000.0] #SP
+set yrange [150000.0:0]
+set zrange [293:1593]
+
+set xlabel "Distance from MOR [km]"
+set ylabel "Depth [km]"
+#set xtics ("0" 0, "500" 500000, "1000" 1000000, "1600" 1600000) # OP
+set xtics ("0" 0, "500" 500000, "1000" 1000000, "1500" 1500000, "2000" 2000000, "2400" 2400000) # SP
+set ytics ("0" 0, "50" 50000, "100" 100000)
+
+
+# Sampling for color plotting
+set samples 160
+set isosamples 100
+
+# Write temperatures to table
+set table 'T_OP.dat'
+#set table 'T_SP.dat'
+
+tslab(x)= x*(1.0/v_spread)*3600.0*24.0*365.25 
+sum_term(i,x,y)= 1.0/i * exp(-kappa*i*i*pi*pi*tslab(x)/(dmax*dmax)) * sin(i*pi*y/dmax)
+
+splot Ts+(Ta-Ts)*(y/dmax + 2.0/pi * (sum [i=1:80] sum_term(i,x,y))) notitle
+
+unset table
+
+# Write bottom oceanic plate isotherm to table
+#set table 'isotherm_OP.dat'
+set table 'isotherm_SP.dat'
+
+set contour base
+#set cntrparam levels disc 1463.0
+set cntrparam levels disc 1590.0
+unset surface
+
+tslab(x)= x*(1.0/v_spread)*3600.0*24.0*365.25
+sum_term(i,x,y)= 1.0/i * exp(-kappa*i*i*pi*pi*tslab(x)/(dmax*dmax)) * sin(i*pi*y/dmax)
+
+splot Ts+(Ta-Ts)*(y/dmax + 2.0/pi * (sum [i=1:80] sum_term(i,x,y))) notitle
+
+unset table
+
+# Plot figure
+set term png
+set output 'SP.png'
+set surface
+
+set title 'SP temperature distribution - plate cooling model'
+
+#set y2range [15:0] #OP
+set y2range [60:0] #SP
+set y2label "Plate age [My]"
+#set y2tics ("0" 0, "5" 5, "10" 10, "15" 15) #OP
+set y2tics ("0" 0, "20" 20, "40" 40, "60" 60) #SP
+
+set palette rgbformulae 33,13,10
+set cblabel "Temperature [K]"
+set cbrange [ 293.00 : 1593.00 ] noreverse nowriteback
+set cbtics ("293" 293, "400" 400, "600" 600, "" 800, "" 1000, "1200" 1200, "1400" 1400, "1593" 1593)
+
+set key bottom left
+
+tslab(x)= x*(1.0/v_spread)/1e6
+
+plot 'T_SP.dat' u 1:2:3 with image, \
+     'isotherm_SP.dat' u 1:2 w l t 'Plate thickness',\
+     tslab(x) w l t 'Plate age' axes x1y2
+#     50000 lc rgb "black" lt 2 notitle axes x1y1
