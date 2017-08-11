@@ -10,3 +10,14 @@ The repository includes the following files needed to run the benchmarks and
 - Source code of the plugins that can be compiled as shared libraries (*.cc and *.h)
 Also included are gnuplot scripts (script_*) and data files (*.dat) used in these scripts for
 plotting the graphs in the paper.
+
+
+The included directories correspond to the following sections of the paper:
+indentor                         Section 3.1
+brick                            Section 3.2
+sandbox                          Section 3.3
+detachment                       Section 3.4
+3D_subduction                    Section 4
+2D_subduction                    Section 4
+selfconsistent_subduction        Appendix A
+compressible_subduction		 Appendix B
