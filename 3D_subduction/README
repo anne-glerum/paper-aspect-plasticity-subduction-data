@@ -1,0 +1,22 @@
+1) Install the following libraries as a plugin
+to create a rectangular box geometry with a freely
+subducting plate and overriding plate:
+- 3Dsubd_temp.* (for the initial temperature of model 2)
+- 3Dsubd_compo.* (for the initial compositions of model 2)
+- tag_composition.* (for mesh refinement based on compositional fields)
+and
+- viscoplastic.* 
+
+2) Inspect the initial temperature distribution with the gnuplot script
+script_slab_oceanic_T
+
+3) Run the 3D version of subduction model 1 with for the first time step
+3D_subduction_1.prm 
+or with an adjacent plate with
+3D_subduction_1_AP.prm
+
+4) Run the 3D version of subduction model 2 with for the first time step
+3D_subduction_2.prm 
+and for the subsequent time evolution
+restart_3D_subduction_2.prm
+TODO: add these files!
