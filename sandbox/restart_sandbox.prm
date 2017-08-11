@@ -1,0 +1,194 @@
+# This is the input file for the "sandbox extension experiment"
+# results of Glerum et al. (2017). This benchmark was first
+# designed and performed by Buiter et al. (2006).
+set Dimension                              = 2
+set Start time                             = 0
+set End time                               = 3100 
+set Resume computation                     = true
+set CFL number                             = 0.5
+set Use years in output instead of seconds = false
+set Output directory                       = restart_sandbox_6
+set Nonlinear solver scheme                = iterated Stokes
+set Max nonlinear iterations               = 20
+set Max nonlinear iterations in pre-refinement = 0
+set Linear solver tolerance                = 1e-6
+set Nonlinear solver tolerance             = 1e-6
+set Number of cheap Stokes solver steps    = 0 #200
+
+# We require the material model viscoplastic.cc plugin
+set Additional shared libraries            = ../SM13_3D/lib_SM13_3D/build_release/libsm13_3d.so
+
+# A box of 20 by 5 cm of square cells
+subsection Geometry model
+  set Model name = box
+    subsection Box
+      set X extent = 0.20
+      set Y extent = 0.05
+     set X repetitions = 4
+   end
+end
+
+subsection Gravity model
+  set Model name = vertical
+  subsection Vertical
+    set Magnitude = 9.81
+  end
+
+end
+
+# A linear viscous silicon layer overlain by
+# viscoplastic sand
+subsection Material model
+  set Model name = viscoplastic
+
+  subsection Viscoplastic model
+     set Reference temperature         = 0
+     set Reference density             = 1000.
+     set Thermal expansion coefficient = 0 
+     set Reference specific heat       = 1 
+     set Reference viscosity           = 1e7 
+
+     # An estimate for the initial strain rate can be made from the velocity boundary conditions 
+     # 6.94e-6/0.2=3.47e-5 1/s and should not exceed the maximum strain rate estimate 
+     # 6.94e-6/0.00039}=1.78e-2 1/s. 
+     # The maximum strain rate can be used to compute the minimum viscosity of the sand of about 227 Pas.
+     subsection Viscosity
+       set Viscosity Averaging           = Max
+       set Minimum Viscosity             = 1e2 
+       set Maximum Viscosity             = 1e9
+       set Harmonic viscous and plastic viscosity averaging = true
+       set Use initial strain rate     = true
+       set Initial strain rate         = 1e-6
+     end
+     
+  end
+end
+
+
+# We refine based on an approximate gradient of
+# the viscosity and density fields
+subsection Mesh refinement
+  set Initial adaptive refinement        = 0
+  set Initial global refinement          = 7
+  set Refinement fraction                = 0.90
+  set Coarsening fraction                = 0.05
+  set Strategy                           = viscosity, density
+  set Minimum refinement level           = 3
+
+  set Refinement criteria merge operation = plus
+  set Time steps between mesh refinement  = 5
+end
+
+
+# The top boundary is open, so we set constant temperature
+# and composition there. 
+# On the bottom and right boundary we prescribe a horizontal 
+# velocity. On the bottom boundary, there is a moving velocity 
+# discontinuity between zero velocity on the left and 
+# a velocity of 2.5 cm/h (0.025/3600 m/s) on the right. 
+# The left boundary is free slip.
+subsection Model settings
+  set Fixed temperature boundary indicators   = 2,3
+  set Fixed composition boundary indicators   = 3
+  set Prescribed velocity boundary indicators = 1:function, 2:function 
+
+  set Tangential velocity boundary indicators = 0
+  set Include adiabatic heating = false
+  set Include shear heating     = false
+end
+
+subsection Boundary velocity model
+  subsection Function
+    set Variable names      = x,z,t
+    set Function expression = if(x>=(0.1+0.025/3600*t),6.9444444444e-6,0);0
+  end
+
+end
+
+# We do not include temperature effects
+subsection Initial conditions
+  set Model name = function 
+
+  subsection Function
+    set Function expression = 0.0
+  end
+
+end
+
+subsection Boundary temperature model
+  set Model name = box
+  subsection Box
+    set Bottom temperature = 0
+    set Top temperature    = 0
+    set Left temperature   = 0
+    set Right temperature  = 0
+  end
+
+end
+
+
+subsection Boundary composition model
+  set Model name = box
+  subsection Box
+    set Left composition   = 1, 1, 0
+    set Right composition  = 1, 1, 0
+    set Top composition    = 1, 0, 0
+    set Bottom composition = 0, 1, 1
+  end
+end
+
+
+subsection Compositional fields
+   set Number of fields = 3
+   ## Dislocation creep
+   set List of activation energies dislocation of fields = 0, 0, 0
+   set List of activation volumes dislocation of fields  = 0, 0, 0
+   set List of prefactors dislocation of fields          = 1e-2, 1e-13, 2e-5
+   set List of stress exponents of fields                = 1, 1, 1
+   set List of constant coefficients nu dislocation of fields = 4, 4, 4
+   ## Diffusion creep
+   set List of activation energies diffusion of fields = 0, 0, 0
+   set List of activation volumes diffusion of fields  = 0, 0, 0
+   set List of prefactors diffusion of fields          = 1e-2, 1e-13, 2e-5
+   set List of constant coefficients nu diffusion of fields = 4, 4, 4
+   ## Plasticity
+   set List of cohesions of fields                       = 1e8, 10, 1e8
+   set List of phis of fields                            = 0, 36, 0
+   ## Other material properties
+   set List of capacities of fields                      = 1, 1, 1
+   set List of conductivities of fields                  = 0, 0, 0
+   set List of refdens of fields                         = 1, 1560, 965
+   set List of reftemps of fields                        = 0, 0, 0
+   set List of initial viscs of fields                   = 1e2, 1e5, 5e4
+end
+
+# Three fields: air, sand, silicon
+subsection Compositional initial conditions
+    set Model name = function
+ 
+    subsection Function
+      set Variable names = x,z
+      set Function expression = if(z>=0.035,1,0); \
+                                if((x>=0.05&x<0.15&z<0.005) | (z>=0.035),0,1); \
+                                if(x>=0.05&x<0.15&z<0.005,1,0)
+    end
+ end
+
+
+subsection Postprocess
+  set List of postprocessors = visualization,velocity statistics 
+
+  subsection Visualization
+    set Time between graphical output = 360
+    set List of output variables      = strain rate,viscosity, density, error indicator #, viscosity ratio
+  end
+
+end
+
+subsection Checkpointing
+  set Steps between checkpoint = 20
+end
+
+subsection Termination criteria
+  set Checkpoint on termination = true
+end
