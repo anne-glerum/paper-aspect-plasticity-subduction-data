@@ -112,6 +112,7 @@ namespace aspect
                       {
                         minimum_refinement_level = crust_refinement[1];
                         maximum_refinement_level = crust_refinement[2];
+                      }
                     else if (slab_mantle_present)
                       {
                         minimum_refinement_level = slab_mantle_refinement[1];
