@@ -1,0 +1,31 @@
+## Gnuplot script for the "Slab detachment benchmark"
+## of Glerum et al. 2017.
+  
+set term pdfcairo font "Times-New-Roman,14" 
+
+## The characteristic time tc and thickness wc
+## used to non-dimensionalize the model output
+tc=7.11585e14 ## seconds
+wc=80000.     ## meters
+
+## Set line styles
+set style line 2 lt 1 lw 3 pt 3 linecolor rgb "black"  ## Schmalholz
+set style line 3 lt 1 lw 3 pt 3 linecolor rgb "red"    ## ASPECT 
+
+## Graph formatting
+set grid lt 1 lc rgb "grey"
+set border lw 3
+set key left bottom Left reverse at 0.04,0.05
+set xlabel 'Time [-]' offset 0,0.5,0 font "Times-New-Roman:Bold, 18"
+set ylabel 'Necking width [-]' offset 2,0,0 font "Times-New-Roman:Bold, 18"
+
+## The output file
+set output 'detachment_necking.pdf'
+
+## Plotting
+plot[0:1][0:1] \
+ 'detachment/necking_evolution.txt'       u ($1/tc):(($3)/wc) w l ls 3  t 'ASPECT 1.5', \
+ 'detachment_h/necking_evolution.txt'       u ($1/tc):(($3)/wc) w l   t 'harmonic avarage', \
+ 'detachment_matav_h/necking_evolution.txt'       u ($1/tc):(($3)/wc) w l   t 'harmonic material average'
+
+#'schmalholz_slab_dataNEW.txt' u 1:2 w l ls 2   t 'Schmalholz (2011)' ,\
