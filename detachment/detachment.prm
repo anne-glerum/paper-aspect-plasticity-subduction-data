@@ -1,0 +1,163 @@
+# Input file for the Detachment benchmark of 
+# Schmalholz 2011 as performed in the paper of Glerum et al. 2017.
+# It considers a 2D box with a lithosphere of nonlinear rheology
+# and a vertically hanging slab that necks over time.
+set Dimension                              = 2
+set End time                               = 7.8894e14 #seconds = 25My
+set Use years in output instead of seconds = false
+set Output directory                       = detachment
+set Nonlinear solver scheme                = iterated Stokes
+set Nonlinear solver tolerance             = 1e-4 
+set Max nonlinear iterations               = 50 
+set Linear solver tolerance                = 1e-5 
+set Number of cheap Stokes solver steps    = 200 
+set Max nonlinear iterations in pre-refinement = 0
+
+# We need the viscoplastic.cc plugin.
+set Additional shared libraries            = ../SM13_3D/lib_SM13_3D/build_release/libsm13_3d.so
+
+# A 2D rectangle of 1000x660 km.
+subsection Geometry model 
+  set Model name = box
+    subsection Box
+      set X extent = 1000000.0 
+      set Y extent = 660000.0
+   end
+end
+
+# Vertical gravity. 
+subsection Gravity model
+  set Model name = vertical 
+  subsection Vertical
+    set Magnitude = 9.81
+  end
+end
+
+# Dislocation rheology set to linear viscosity in the mantle. 
+# Temperature effects are not considered.
+subsection Material model
+  set Model name = viscoplastic
+  #set Material averaging = harmonic average
+
+  subsection Viscoplastic model
+     set Thermal conductivity          = 0 
+     set Reference density             = 3150.0
+     set Reference viscosity           = 3.0e22
+     set Reference temperature         = 0 
+     set Thermal expansion coefficient = 0 
+     set Reference specific heat       = 1 
+
+       subsection Viscosity
+         set Viscosity Averaging       = Max # Harmonic
+         set Minimum Viscosity         = 1e21
+         set Maximum Viscosity         = 1e25
+       end
+  end
+end
+
+# We refine the mesh at time 0 such that it's highest in the lithosphere,
+# and then keep it constant over time.
+subsection Mesh refinement
+  set Initial adaptive refinement        = 2
+  set Initial global refinement          = 6
+  set Strategy                           = minimum refinement function
+  subsection Minimum refinement function
+    set Coordinate system                = cartesian
+    set Variable names                   = x,z
+    set Function expression              = if((z>540000)|(x>=420000&x<580000),8,if((z>520000)|(x>=400000&x<600000),7,6)) 
+  end
+  set Time steps between mesh refinement = 0
+end
+
+# The left and right vertical boundary are set to no slip,
+# to fix the lithosphere.
+# The top and bottom boundary allow for tangential motion only (free slip).
+subsection Model settings
+  set Fixed temperature boundary indicators   = 2,3
+  set Zero velocity boundary indicators       = 0,1
+  set Tangential velocity boundary indicators = 2,3
+  set Include adiabatic heating               = false
+  set Include shear heating                   = false
+end
+
+# Temperature effects are not considered,
+# so we set everything to zero.
+subsection Initial conditions
+  set Model name = function 
+
+  subsection Function
+    set Function expression = 0 
+  end
+
+end
+
+subsection Boundary temperature model
+  set Model name = box 
+  subsection Box
+    set Bottom temperature = 0 
+    set Top temperature = 0 
+  end
+
+end
+
+# We use 2 fields, the first describes the mantle, 
+# the second the non-Newtonian slab/lithosphere.
+subsection Compositional fields
+   set Number of fields                                  = 2 
+   ## Dislocation creep
+   set List of activation energies dislocation of fields = 0, 0
+   set List of activation volumes dislocation of fields  = 0, 0
+   set List of prefactors dislocation of fields          = 1e-21, 1.9644e-47
+   set List of stress exponents of fields                = 1, 4
+   set List of constant coefficients nu dislocation of fields = 4, 2
+   ## Diffusion creep
+   set List of activation energies diffusion of fields = 0, 0
+   set List of activation volumes diffusion of fields  = 0, 0
+   set List of prefactors diffusion of fields          = 1e-21, 1.e-50
+   set List of constant coefficients nu diffusion of fields = 4, 2
+   ## Plasticity
+   set List of cohesions of fields                       = 1e15, 1e15
+   set List of phis of fields                            = 0, 0
+   ## Other material properties
+   set List of capacities of fields                      = 1,1
+   set List of conductivities of fields                  = 0,0
+   set List of refdens of fields                         = 3150.0, 3300.0
+   set List of reftemps of fields                        = 0,0
+   set List of initial viscs of fields                   = 1e21, 2e23
+end
+
+# Description of the initial compositional fields mantle and slab
+subsection Compositional initial conditions
+   set Model name = function
+   subsection Function
+     set Variable names = x,z
+     set Function expression = if((x<460000.0&z<580000.0)|(z<330000.0&x>=460000.0&x<540000.0)|(z<580000.0&x>=540000.0),1,0); \
+                               if((x<460000.0&z<580000.0)|(z<330000.0&x>=460000.0&x<540000.0)|(z<580000.0&x>=540000.0),0,1)
+   end
+end
+
+# We output the solution every 1 My and monitor the velocity and viscous dissipation
+subsection Postprocess
+  set List of postprocessors = visualization, velocity statistics, viscous dissipation statistics, tracers
+
+  subsection Visualization
+    set Time between graphical output = 3.15576e13 # seconds = 1My
+    set List of output variables      = strain rate, viscosity, density, error indicator
+  end
+
+# We read a file with 22 initial particle locations and
+# output the new particle locations over time to an ascii file.
+  subsection Tracers
+    set Number of tracers         = 22
+    set Time between data output  = 3.15576e13 # seconds = 1My
+    set Data output format        = ascii
+    set List of tracer properties = 
+    set Particle generator name   = ascii file
+    subsection Generator
+      subsection Ascii file
+        set Data directory = /detachment/
+        set Data file name = initial_particle_location.dat
+      end
+    end
+  end
+end
