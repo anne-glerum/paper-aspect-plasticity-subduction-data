@@ -1,0 +1,18 @@
+1) Install the following libraries as a plugin
+to create a rectangular box geometry with a freely
+subducting plate and overriding plate:
+- 2Dsubd_temp.* (for the initial temperature of model 2)
+- 2Dsubd_compo.* (for the initial compositions of model 2)
+- tag_composition.* (for mesh refinement based on compositional fields)
+and
+- viscoplastic.* 
+
+2) Run the 2D version of subduction model 1 with for the first time step
+2D_subduction_1.prm 
+and for the subsequent time evolution
+restart_2D_subduction_1.prm
+
+2) Run the 2D version of subduction model 2 with for the first time step
+2D_subduction_2.prm 
+and for the subsequent time evolution
+restart_2D_subduction_2.prm
