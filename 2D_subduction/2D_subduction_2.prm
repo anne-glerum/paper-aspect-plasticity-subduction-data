@@ -24,10 +24,10 @@ set Max nonlinear iterations in pre-refinement = 0
 # Each inner iteration is solved up to this linear
 # solver tolerance.
 set Linear solver tolerance                = 1e-5
-set Adiabatic surface temperature          = 1573 # after Afonso et al. (2007)
 set Number of cheap Stokes solver steps    = 0 #200
+set Adiabatic surface temperature          = 1573 # after Afonso et al. (2007)
 
-# We need the viscoplastic.cc plugin.
+# We need the viscoplastic.cc, 2Dsubd_temp.cc, 2Dsubd_compo.cc and tag_composition.cc plugins.
 set Additional shared libraries            = ../SM13_3D/lib_SM13_3D/build_release/libsm13_3d.so, lib_SM13_2D/build_release/libsubd_2d.so
 
 # A rectangular box of 4000x660 km

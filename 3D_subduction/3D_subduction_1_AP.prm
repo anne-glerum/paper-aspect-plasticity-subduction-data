@@ -11,15 +11,27 @@ set End time                               = 40.e6 #My
 set CFL number                             = 0.5
 set Use years in output instead of seconds = true
 set Output directory                       = model1_AP
+# This nonlinear solver scheme solver once for temperature
+# and composition per time step, and then iterates out
+# the Stokes equations until the nonlinear solver tolerance
+# is met. 
 set Nonlinear solver scheme                = iterated Stokes
+# In case the nonlinear solver tolerance is not met within
+# 100 iterations, move on to the next timestep.
+set Nonlinear solver tolerance             = 1e-4 
 set Max nonlinear iterations               = 100
+# Each inner iteration is solved up to this linear
+# solver tolerance.
 set Linear solver tolerance                = 1e-6
 set Number of cheap Stokes solver steps    = 300
-set Nonlinear solver tolerance             = 1e-4 
+# This prohibits Stokes solves when the mesh
+# is not maximally refined yet during timestep 0.
 set Max nonlinear iterations in pre-refinement = 0
 
+# We need the viscoplastic.cc plugin.
 set Additional shared libraries            = lib_SM13_3D/build_release/libsm13_3d.so
 
+# A rectangular box of 4000x660x800 km
 subsection Geometry model
   set Model name = box
     subsection Box
@@ -30,6 +42,7 @@ subsection Geometry model
    end
 end
 
+# Vertical gravity
 subsection Gravity model
   set Model name = vertical 
   subsection Vertical
@@ -49,6 +62,10 @@ subsection Material model
      set Thermal expansion coefficient = 0
      set Reference specific heat       = 1.0
 
+# Viscosity is capped between the uniform mantle viscosity
+# and the maximum lithosphere viscosity.
+# The other settings refer to Eq. (18), (11) and (13) of the paper.
+# Using harmonic averaging can be easier for the solver to handle.
      subsection Viscosity
          set Viscosity Averaging       = Max
          set Harmonic viscous and plastic viscosity averaging = false
@@ -60,6 +77,13 @@ subsection Material model
 end
 
 
+# We refine based on the Kelly error estimate of composition and 
+# the approximated gradient of viscosity. 
+# The mesh is adapted based on these 'error indicators' every 20
+# timesteps, such that the outline of the plates and the crust
+# itself are well refined. The minimum refinement function
+# ensures the transform zone in between the subducting/overriding plate
+# and the adjacent plate remains well resolved. 
 subsection Mesh refinement
   set Initial adaptive refinement        = 2
   set Initial global refinement          = 4
@@ -115,33 +139,35 @@ end
 subsection Compositional fields
    set Number of fields = 6
    ## Dislocation creep
-   set List of activation energies dislocation of fields             = 0,0,0,0,0,0
-   set List of activation volumes dislocation of fields              = 0,0,0,0,0,0
+   set List of activation energies dislocation of fields             =       0,      0,     0,    0,      0,     0
+   set List of activation volumes dislocation of fields              =       0,      0,     0,    0,      0,     0
    set List of prefactors dislocation of fields                      = 6.3694e-21, 3.1847e-23, 9.0992e-24, 6.3694e-24, 6.3694e-21, 9.0992e-24
-   set List of stress exponents of fields                            = 1, 1, 1,1,1,1    
-   set List of constant coefficients nu dislocation of fields        = 4, 4, 4, 4, 4, 4 
+   set List of stress exponents of fields                            =       1,      1,     1,    1,      1,     1    
+   set List of constant coefficients nu dislocation of fields        =       4,      4,     4,    4,      4,     4 
    ## Diffusion creep
    set List of prefactors diffusion of fields                        = 6.3694e-21, 3.1847e-23, 9.0992e-24, 6.3694e-24, 6.3694e-21, 9.0992e-24
-   set List of activation energies diffusion of fields               = 0,0,0,0,0,0
-   set List of activation volumes diffusion of fields                = 0,0,0,0,0,0
-   set List of constant coefficients nu diffusion of fields          = 4,4,4,4,4,4
+   set List of activation energies diffusion of fields               =       0,      0,     0,    0,      0,     0
+   set List of activation volumes diffusion of fields                =       0,      0,     0,    0,      0,     0
+   set List of constant coefficients nu diffusion of fields          =       4,      4,     4,    4,      4,     4
    ## Plasticity
-   set List of cohesions of fields                                   = 1e15,1e15,1e15,20e6,1e15,1e15 
-   set List of phis of fields                                        = 0,0,0,0,0,0
+   set List of cohesions of fields                                   =    1e15,   1e15,  1e15, 20e6,   1e15,  1e15 
+   set List of phis of fields                                        =       0,      0,     0,    0,      0,     0
    ## Material properties
-   set List of capacities of fields                                  = 1,1,1,1,1,1
-   set List of conductivities of fields                              = 0,0,0,0,0,0
-   set List of refdens of fields                                     = 3250.0, 3250.0, 3330,3330, 3250, 3250   
-   set List of reftemps of fields                                    = 0,0,0,0,0,0  
+   set List of capacities of fields                                  =       1,      1,     1,    1,      1,     1
+   set List of conductivities of fields                              =       0,      0,     0,    0,      0,     0
+   set List of refdens of fields                                     =  3250.0, 3250.0,  3330, 3330,   3250,  3250   
+   set List of reftemps of fields                                    =       0,      0,     0,    0,      0,     0  
    set List of initial viscs of fields                               = 1.57e20,3.14e22,1.1e23,1.e20,1.57e20,1.1e23
 end
 
+# The below functions describe the initial conditions
+# for the compositional fields, which represent
+# the mantle M, overriding plate OP, mantle part of the subducting plate MSP, the crustal part,
+# the transform zone TZ and the adjacent plate AP
 subsection Compositional initial conditions
    set Model name = function
-# mantle, OP, Mantle SP, Crust SP, WZ, AP
    subsection Function
      set Variable names = x,y,z
-     set Function constants = De=660000.0,A=50000.0,B=80000.0
      set Function expression = if((y>=400000.0&((x>300000.0&z>=610000.0&z>=(660000.0+0.5555555*(x-1600000.0)))|(x>=1419830.0&z>=(560000.0+0.5555555*(x-1600000.0))&z<(660000.0+0.5555555*(x-1600000.0)))|(x>=1600000.0&z>=560000.0&x<3575000.0)|(x>=3575000.0&x<3700000.0&z>=(660000.0+0.8*(x-3700000.0)))))|(y<400000&z>=560000),0,1); \
                                if(y>=400000.0&x>300000.0&z>=610000.0&z>=(660000.0+0.5555555*(x-1600000.0)),1,0); \
                                if(y>=400000.0&((x>=1419830.0&z<(630000.0+0.5555555*(x-1600000.0))&z>=(560000.0+0.5555555*(x-1600000.0))&z<630000.0)|(x>=1600000.0&x<3575000&z<630000.0&z>=560000.0)|(x>=3575000&x<3700000&z<(660000.0+0.24*(x-3700000.0))&z>=(660000.0+0.8*(x-3700000.0)))),1,0); \
@@ -152,6 +178,7 @@ subsection Compositional initial conditions
 end
 
 
+# We do not use temperature
 subsection Discretization
   set Temperature polynomial degree                = 1
   subsection Stabilization parameters
@@ -159,6 +186,9 @@ subsection Discretization
   end
 end
 
+# To be able to restart the run, we produce
+# restart files every 50 timesteps and 
+# when we reach the specified end time.
 subsection Checkpointing
   set Steps between checkpoint = 50
 end
@@ -168,15 +198,16 @@ subsection Termination criteria
 end
 
 
+# We output visualization files every milion years.
 subsection Postprocess
   set List of postprocessors = visualization,velocity statistics
 
   subsection Visualization
     set Time between graphical output = 1e6 #years
-    set List of output variables      = strain rate,material properties, error indicator #, viscosity ratio
+    set List of output variables      = strain rate, material properties, error indicator #, viscosity ratio
     set Interpolate output            = true
     subsection Material properties
-      set List of material properties = density,viscosity
+      set List of material properties = density, viscosity
     end
   end
 

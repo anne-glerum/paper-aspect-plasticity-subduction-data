@@ -10,13 +10,13 @@ and
 2) Inspect the initial temperature distribution with the gnuplot script
 script_slab_oceanic_T
 
-3) Run the 3D version of subduction model 1 with for the first time step
+3) Run the 3D version of subduction model 1 with
 3D_subduction_1.prm 
 or with an adjacent plate with
 3D_subduction_1_AP.prm
 
 4) Run the 3D version of subduction model 2 with for the first time step
 3D_subduction_2.prm 
-and for the subsequent time evolution
+and for the subsequent time evolution with
 restart_3D_subduction_2.prm
-TODO: add these files!
+after copying the restart* files to the directory restart_model2.
