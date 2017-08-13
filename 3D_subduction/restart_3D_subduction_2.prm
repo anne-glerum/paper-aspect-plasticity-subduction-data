@@ -1,0 +1,214 @@
+# Input file for the 3D subduction
+# model 2 of Glerum et al. (2017, Section 4).
+# Model 2 is thermomechanically coupled and uses
+# a nonlinear viscoplastic rheology.
+
+set Dimension                              = 3
+set Start time                             = 2000
+set End time                               = 70e6 #My
+set Maximum time step                      = 40000
+set CFL number                             = 0.5
+set Timing output frequency                = 20
+set Use years in output instead of seconds = true
+set Output directory                       = restart_model2
+# This nonlinear solver scheme solver once for temperature
+# and composition per time step, and then iterates out
+# the Stokes equations until the nonlinear solver tolerance
+# is met. 
+set Nonlinear solver scheme                = iterated Stokes 
+# In case the nonlinear solver tolerance is not met within
+# 100 iterations, move on to the next timestep.
+set Nonlinear solver tolerance             = 5e-5
+set Max nonlinear iterations               = 10
+# This prohibits Stokes solves when the mesh
+# is not maximally refined yet during timestep 0.
+set Max nonlinear iterations in pre-refinement = 0
+# Each inner iteration is solved up to this linear
+# solver tolerance.
+set Linear solver tolerance                = 1e-6
+set Number of cheap Stokes solver steps    = 0
+set Adiabatic surface temperature          = 1573 #after Afonso et al. (2007)
+
+# We need the viscoplastic.cc, 3Dsubd_temp.cc, 3Dsubd_compo.cc and tag_composition.cc plugins.
+set Additional shared libraries            = lib_3Dsub/build_release/libsm13_3d.so
+
+# A rectangular box of 4000x800x660 km
+subsection Geometry model
+  set Model name = box
+    subsection Box
+      set X extent = 4000000
+      set Y extent = 800000
+      set Z extent = 660000
+      set X repetitions = 5
+   end
+end
+
+
+# Vertical gravity
+subsection Gravity model
+  set Model name = vertical
+  subsection Vertical
+    set Magnitude = 9.81
+  end
+end
+
+
+subsection Material model
+  set Model name = viscoplastic
+  set Material averaging = log average
+
+# Please refer to Eq. (18), (12) and (14) of the paper.
+  subsection Viscoplastic model
+     set Thermal conductivity          = 2.0
+     set Reference density             = 3350.0
+     set Reference viscosity           = 1.0e23
+     set Reference temperature         = 293.5
+     set Thermal expansion coefficient = 2e-5
+     set Reference specific heat       = 1250.0
+
+# Please refer to Eq. (16), (12) and (14) of the paper.
+     subsection Viscosity
+         set Viscosity Averaging       = Geometric  
+         set Harmonic viscous and plastic viscosity averaging = true
+         set Harmonic effective and maximum viscosity averaging = true
+         set Minimum Viscosity         = 1e19
+         set Maximum Viscosity         = 1e24
+     end
+  end
+end
+
+
+# We refine based on the Kelly error estimate of composition.
+# Also, by setting
+# individual minimum and maximum refinement levels for each
+# compositional field, we have precise control on the refinement.
+# The mesh is adapted every 15
+# timesteps, such that the outline of the plates and the crust
+# itself remain well refined. 
+subsection Mesh refinement
+  set Initial adaptive refinement        = 3 
+  set Initial global refinement          = 4
+  set Refinement fraction                = 0.90
+  set Coarsening fraction                = 0.10
+  set Minimum refinement level           = 4
+  # Activate 'minimum refinement function' for
+  # at least level 6 refinement in the upper 20 km
+  # of the subducting and overriding plates, such that they remain
+  # uncoupled from the vertical left and right boundaries.  
+  set Strategy                           = tag composition v2, composition #, minimum refinement function
+
+  # Syntax: (The compositional field number,) minimum refinement level, maximum level
+  subsection Composition
+     set Crust refinement = 4,7,7
+     set Slab mantle refinement = 2,6,6
+     set Overriding plate refinement = 1,6,6
+     set Adjacent plate refinement = 0,4,6
+     set Weakzone refinement = 3,6,7
+     set Mantle refinement = 4,6
+  end
+
+  subsection Minimum refinement function
+     set Coordinate system   = cartesian
+     set Function expression = if(y>380000.0&z>640000.0,6,4)
+  end
+
+  set Run postprocessors on initial refinement = false
+  set Time steps between mesh refinement = 15
+end
+
+
+# All boundaries are free slip, except the bottom boundary,
+# which is set to no slip. Temperature is fixed at the top
+# and bottom boundary.
+subsection Model settings
+  set Fixed temperature boundary indicators   = 4,5
+  set Zero velocity boundary indicators       = 4
+  set Tangential velocity boundary indicators = 0,1,2,3,5
+  set Include adiabatic heating               = false
+  set Include shear heating                   = false
+end
+
+
+# Initial temperature of the plates is specified according to the 
+# lithospheric-age based plate cooling model. 
+# A linear temperature increase is prescribed in the mantle.
+# The spreading velocities of the rifts belonging to the 
+# overriding and subducting plates as well as their widths
+# can be varied.
+subsection Initial conditions
+  set Model name = 3D subduction
+end
+
+subsection Boundary temperature model
+  set Model name = box
+  subsection Box
+    set Bottom temperature = 1771 # linear gradient of 0.25C/km 
+    set Top temperature = 293
+  end
+
+end
+
+# There are 6 compositional fields, they represent
+# the mantle M, adjacent plate AP, overriding plate OP, mantle part of the subducting plate SP, 
+# the transform zone TZ and the crustal part of the subducting plate.
+subsection Compositional fields
+   set Number of fields = 6
+   ##                                                                      M     AP      OP     MSP     TZ   crust
+   ## Dislocation creep
+   set List of activation energies dislocation of fields             =  43e4,    0.,   54e4,   54e4,    0.,     0.
+   set List of activation volumes dislocation of fields              = 15e-6,    0.,  20e-6,  20e-6,    0.,     0. 
+   set List of prefactors dislocation of fields                      = 3.906e-15, 1e-24, 2.42e-16, 2.42e-16, 1e-19, 1e-21	
+   set List of stress exponents of fields                            =    3.,    1.,    3.5,    3.5,    1.,     1.    
+   set List of constant coefficients nu dislocation of fields        =   0.5,    2.,     1.,     1.,    2.,     2. 
+   ## Diffusion creep
+   set List of activation energies diffusion of fields               =  24e4,    0.,    3e5,    3e5,    0.,     0.
+   set List of activation volumes diffusion of fields                =  5e-6,    0.,   6e-6,   6e-6,    0.,     0.
+   set List of prefactors diffusion of fields                        = 3.73e-14, 0., 6.079e-14, 6.079e-14, 0.,  0.
+   set List of constant coefficients nu diffusion of fields          =   0.5,    2.,     1.,     1.,    2.,     2.
+   ## Plasticity
+   set List of cohesions of fields                                   =   1e6,  1e15,   1e15,    1e6,  1e15,  1e15 
+   set List of phis of fields                                        =   20.,    0.,     0.,    20.,    0.,     0.
+   ## Material properties
+   set List of capacities of fields                                  = 1250., 1250.,  1250.,  1250.,  1250,   750.
+   set List of conductivities of fields                              =    2.,    2.,     2.,     2.,    2.,     2.
+   set List of refdens of fields                                     = 3350., 3350.,  3350.,  3350., 3350.,  3150.   
+   set List of reftemps of fields                                    = 293.5, 293.5,  293.5,  293.5, 293.5, 293.5
+   set List of initial viscs of fields                               =  2e20,  1e24, 5.4e23, 5.4e23,  1e21,  1e20
+end
+
+# For the initial compositions, we draw on the parameters
+# set in the Initial conditions section for temperature. 
+subsection Compositional initial conditions
+   set Model name = 3D subduction
+end
+
+subsection Discretization
+  subsection Stabilization parameters
+    #Times 1.5 for 3D
+    set beta  = 0.117 
+    set cR    = 0.495
+  end
+end
+
+# We output visualization files every 100 kyears.
+subsection Postprocess
+  set List of postprocessors = visualization,velocity statistics
+
+  subsection Visualization
+    set Time between graphical output = 100000 
+    set List of output variables      = strain rate,viscosity, density, viscosity ratio
+    set Interpolate output            = true
+  end
+
+end
+
+# To be able to restart the run, we produce
+# restart files every 50 timesteps and 
+# when we reach the specified end time.
+subsection Checkpointing
+  set Steps between checkpoint = 10
+end
+
+subsection Termination criteria
+  set Checkpoint on termination = true
+end
