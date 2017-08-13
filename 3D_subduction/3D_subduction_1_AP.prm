@@ -204,7 +204,7 @@ subsection Postprocess
 
   subsection Visualization
     set Time between graphical output = 1e6 #years
-    set List of output variables      = strain rate, material properties, error indicator #, viscosity ratio
+    set List of output variables      = strain rate, material properties, error indicator 
     set Interpolate output            = true
     subsection Material properties
       set List of material properties = density, viscosity

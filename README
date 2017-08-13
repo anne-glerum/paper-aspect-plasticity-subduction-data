@@ -13,6 +13,7 @@ plotting the graphs in the paper.
 
 
 The included directories correspond to the following sections of the paper:
+plugin                           Section 2.2
 indentor                         Section 3.1
 brick                            Section 3.2
 sandbox                          Section 3.3

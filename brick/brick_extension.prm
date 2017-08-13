@@ -199,6 +199,6 @@ subsection Postprocess
   set List of postprocessors = visualization, shear band angle, Stokes residual
 
   subsection Visualization
-    set List of output variables = viscosity, strain rate #, viscosity ratio
+    set List of output variables = viscosity, strain rate
   end
 end
