@@ -188,7 +188,7 @@ subsection Postprocess
 
   subsection Visualization
     set Time between graphical output = 100000 
-    set List of output variables      = strain rate,viscosity, density, viscosity ratio
+    set List of output variables      = strain rate,viscosity, density #, viscosity ratio
     set Interpolate output            = true
   end
 
