@@ -279,15 +279,19 @@ namespace aspect
           mantle_refinement = std::vector <unsigned int> (mantle.begin(),
                                                           mantle.end());
 
-          AssertThrow (mantle_refinement.size() == 2,
+          AssertThrow (mantle_refinement.size() == 3,
                        ExcMessage ("The number of refinement data given here must be "
-                                   "equal to 2 (min level + max level). "));
+                                   "equal to 3 (field number + min level + max level). "));
+          
+          AssertThrow (mantle_refinement[0] < this->n_compositional_fields(),
+                       ExcMessage ("The number of compositional field to refine (starting "
+                                   "from 0) should be smaller than the number of fields. "));
 
-          AssertThrow (mantle_refinement[0] >= min_level,
+          AssertThrow (mantle_refinement[1] >= min_level,
                        ExcMessage ("The minimum refinement for the mantle cannot be "
                                    "smaller than the minimum level of the whole model. "));
 
-          AssertThrow (mantle_refinement[1] <= max_level,
+          AssertThrow (mantle_refinement[2] <= max_level,
                        ExcMessage ("The maximum refinement for the mantle cannot be "
                                    "greater than the maximum level of the whole model. "));
 
