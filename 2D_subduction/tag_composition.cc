@@ -183,8 +183,8 @@ namespace aspect
                             "its maximum refinement level.");
           prm.declare_entry("Mantle refinement","",
                             Patterns::List (Patterns::Integer(0)),
-                            "The compositional field number of the mantle, its minimum refinement level and "
-                            "its maximum refinement level.");
+                            "The  minimum refinement level and "
+                            "maximum refinement level of the mantle.");
         }
         prm.leave_subsection();
       }
@@ -293,10 +293,7 @@ namespace aspect
 
           AssertThrow (crust_refinement[0] != slab_mantle_refinement[0] && \
                        crust_refinement[0] != overriding_refinement[0]  && \
-                       crust_refinement[0] != mantle_refinement[0]  && \
-                       slab_mantle_refinement[0] != overriding_refinement[0] && \
-                       slab_mantle_refinement[0] != mantle_refinement[0] && \
-                       overriding_refinement[0]  != mantle_refinement[0], 
+                       slab_mantle_refinement[0] != overriding_refinement[0], 
                        ExcMessage ("Defined refinement fields the same. "));
 
         }
